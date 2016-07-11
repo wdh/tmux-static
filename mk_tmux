@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+if( ! -e 'libevent-2.0.22-stable.tar.gz' ) {
+	system('curl -L -O https://github.com/libevent/libevent/releases/download/release-2.0.22-stable/libevent-2.0.22-stable.tar.gz') == 0
+		or die 'failed to download libevent';
+}
+
+if( ! -d 'libevent-2.0.22-stable' ) {
+	system('tar -xf libevent-2.0.22-stable') == 0
+		or die 'failed to extract libevent';
+}
+
+chdir('libevent-2.0.22-stable')
+	or die 'failed to chdir into libevent-2.0.22-stable';
+
+system('./configure --prefix=/tmp/local --disable-shared') == 0
+	or die 'failed to configure libevent';
+
+system('make') == 0
+	or die 'failed to make libevent';
+
+system('make install') == 0
+	or die 'failed to make install libevent';
+
+chdir '..' or die 'failed to chdir ..';
+
+if( ! -e 'ncurses-6.0.tar.gz' ) {
+	system('curl -L -O http://ftp.gnu.org/gnu/ncurses/ncurses-6.0.tar.gz') == 0
+		or die 'failed to download ncurses';
+}
+
+if( ! -d 'ncurses-6.0' ) {
+	system('tar -xf ncurses-6.0.tar.gz') == 0
+		or die 'failed to extract ncurses';
+}
+
+chdir('ncurses-6.0') or die 'failed to chdir ncurses-6.0';
+
+system('./configure --prefix=/tmp/local --with-default-terminfo-dir=/usr/share/terminfo  --with-terminfo-dirs="/etc/terminfo:/lib/terminfo:/usr/share/terminfo" && make && make install') == 0
+	or die 'failed to build ncurses';
+
+chdir '..' or die 'failed to chdir ..';
+
+if( ! -e 'tmux-2.2.tar.gz' ) {
+	system('curl -L -O https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz') == 0
+		or die 'failed to download tmux';
+}
+
+if( ! -d 'tmux-2.2' ) {
+	system('tar -xf tmux-2.2.tar.gz') == 0
+		or die 'failed to extract tmux';
+}
+
+chdir('tmux-2.2') or die 'chdir tmux-2.2 failed';
+
+system('./configure --enable-static CFLAGS="-I/tmp/local/include -I/tmp/local/include/ncurses" LDFLAGS="-L/tmp/local/lib -L/tmp/local/include -L/tmp/local/include/ncurses" LIBEVENT_CFLAGS="-I/tmp/local/include" LIBEVENT_LIBS="-L/tmp/local/lib -levent"') == 0
+	or die 'configure tmux failed';
+
+system('make -j5') == 0
+	or die 'make tmux failed';
+
+print "Done\n";
